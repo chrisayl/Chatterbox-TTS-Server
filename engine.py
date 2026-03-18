@@ -353,6 +353,22 @@ def load_model() -> bool:
             return False
 
         MODEL_LOADED = True
+
+        # Patch norm_loudness to preserve float32 dtype.
+        # The original multiplies a float32 numpy array by a Python float
+        # (float64), promoting the result to float64. This causes downstream
+        # assertion errors in s3tokenizer and dtype mismatches in the voice
+        # encoder LSTM.
+        if chatterbox_model and hasattr(chatterbox_model, 'norm_loudness'):
+            _orig_norm = chatterbox_model.norm_loudness
+            def _patched_norm(wav, sr, target_lufs=-27, _orig=_orig_norm):
+                result = _orig(wav, sr, target_lufs)
+                if isinstance(result, np.ndarray) and result.dtype != np.float32:
+                    result = result.astype(np.float32)
+                return result
+            chatterbox_model.norm_loudness = _patched_norm
+            logger.info("Patched norm_loudness to preserve float32 dtype.")
+
         if chatterbox_model:
             logger.info(
                 f"TTS Model loaded successfully on {model_device}. Engine sample rate: {chatterbox_model.sr} Hz."

@@ -15,6 +15,16 @@ soundfile  # Requires libsndfile system library
 librosa
 safetensors
 descript-audio-codec
+# chatterbox-tts dependencies (installed with --no-deps to avoid torch downgrade)
+resemble-perth==1.0.1
+s3tokenizer
+transformers==4.46.3
+diffusers==0.29.0
+conformer==0.3.2
+spacy-pkuseg
+pykakasi==2.3.0
+pyloudnorm
+omegaconf
 
 # Configuration & Utilities
 PyYAML
