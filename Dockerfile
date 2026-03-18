@@ -42,6 +42,11 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
     torchaudio==2.7.0+cu128 \
     --index-url https://download.pytorch.org/whl/cu128
 
+# Install chatterbox-tts first with --no-deps to prevent torch downgrade
+# (chatterbox-tts pins torch==2.5.1 which would overwrite our 2.7+cu128)
+RUN pip3 install --no-cache-dir --no-deps \
+    "chatterbox-tts @ git+https://github.com/devnen/chatterbox-v2.git@master"
+
 # Copy and install remaining requirements (without torch, already installed)
 COPY requirements-nvidia.txt .
 RUN pip3 install --no-cache-dir -r requirements-nvidia.txt

@@ -2,9 +2,8 @@
 # PyTorch is installed separately in the Dockerfile for better layer caching.
 # Do NOT pin torch/torchvision/torchaudio here.
 
-# --- Core TTS Application ---
-# Chatterbox TTS engine - Install from chatterbox-v2 fork
-chatterbox-tts @ git+https://github.com/devnen/chatterbox-v2.git@master
+# NOTE: chatterbox-tts is installed with --no-deps in the Dockerfile
+# to prevent it from downgrading PyTorch from 2.7+cu128 to 2.5.1
 
 # Core Web Framework
 fastapi
