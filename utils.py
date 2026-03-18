@@ -333,6 +333,12 @@ def encode_audio(
                 subtype="pcm_16",
             )
 
+        elif output_format == "pcm":
+            # Raw 16-bit signed integer PCM, no header (OpenAI-compatible)
+            audio_clipped = np.clip(audio_array, -1.0, 1.0)
+            audio_int16 = (audio_clipped * 32767).astype(np.int16)
+            output_buffer.write(audio_int16.tobytes())
+
         elif output_format == "mp3":
             audio_clipped = np.clip(audio_array, -1.0, 1.0)
             audio_int16 = (audio_clipped * 32767).astype(np.int16)

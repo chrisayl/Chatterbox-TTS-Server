@@ -74,9 +74,12 @@ class OpenAISpeechRequest(BaseModel):
     model: str
     input_: str = Field(..., alias="input")
     voice: str
-    response_format: Literal["wav", "opus", "mp3"] = "wav"  # Add "mp3"
+    response_format: Literal["wav", "opus", "mp3", "pcm"] = "wav"
     speed: float = 1.0
     seed: Optional[int] = None
+    exaggeration: Optional[float] = None
+    cfg_weight: Optional[float] = None
+    temperature: Optional[float] = None
 
 
 # --- Logging Configuration ---
@@ -612,6 +615,21 @@ async def get_predefined_voices_api():
         raise HTTPException(
             status_code=500, detail="Failed to retrieve predefined voices list."
         )
+
+
+@app.get("/voices", tags=["OpenAI Compatible"])
+async def get_voices_api():
+    """Returns available voices in a format compatible with external integrations."""
+    try:
+        predefined = utils.get_predefined_voices()
+        voices = [
+            {"voice_id": v["filename"], "name": v["display_name"]}
+            for v in predefined
+        ]
+        return {"voices": voices}
+    except Exception as e:
+        logger.error(f"Error getting voices: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve voices.")
 
 
 # --- File Upload Endpoints ---
@@ -1254,13 +1272,13 @@ async def openai_speech_endpoint(request: OpenAISpeechRequest):
             request.seed if request.seed is not None else get_gen_default_seed()
         )
 
-        # Synthesize the audio
+        # Synthesize the audio (per-request params override server defaults)
         audio_tensor, sr = engine.synthesize(
             text=request.input_,
             audio_prompt_path=str(audio_prompt_path),
-            temperature=get_gen_default_temperature(),
-            exaggeration=get_gen_default_exaggeration(),
-            cfg_weight=get_gen_default_cfg_weight(),
+            temperature=request.temperature if request.temperature is not None else get_gen_default_temperature(),
+            exaggeration=request.exaggeration if request.exaggeration is not None else get_gen_default_exaggeration(),
+            cfg_weight=request.cfg_weight if request.cfg_weight is not None else get_gen_default_cfg_weight(),
             seed=seed_to_use,
             language=get_gen_default_language(),
         )
