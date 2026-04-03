@@ -802,6 +802,28 @@ async def upload_predefined_voice_endpoint(files: List[UploadFile] = File(...)):
     return JSONResponse(content=response_data, status_code=status_code)
 
 
+@app.delete("/voices/{filename}", tags=["File Management"])
+async def delete_predefined_voice(filename: str):
+    """Delete a predefined voice file by filename."""
+    # Validate filename to prevent path traversal
+    if "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+
+    predefined_voices_path = get_predefined_voices_path(ensure_absolute=True)
+    file_path = Path(predefined_voices_path) / filename
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Voice '{filename}' not found.")
+
+    try:
+        file_path.unlink()
+        logger.info(f"Deleted predefined voice: {filename}")
+        return {"message": f"Voice '{filename}' deleted successfully."}
+    except Exception as e:
+        logger.error(f"Error deleting voice '{filename}': {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete voice: {e}")
+
+
 # --- TTS Generation Endpoint ---
 
 
